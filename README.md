@@ -31,7 +31,7 @@ roslaunch rrt rrt.launch
 ### YAML file
 To select which map to run the test on, enter the ```maps``` directory and open the ```map.yaml``` file. 
 
-```image``` indicates the path to the map that you want to use.
+```image```: indicates the path to the map that you want to use.
 
 ```resolution```: indicates the resolution per grid of the map. A resolution of 1 means each grid of the map represents 1m.
 
