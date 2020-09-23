@@ -1,0 +1,8 @@
+<launch>
+	<arg name="map_file" default="$(find rrt)/maps/map.yaml"/>
+
+	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+	<node name="planner" pkg="rrt" type="planner" output="screen"/>
+
+	<node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(rrt/maps/map.rviz"/>
+</launch>
