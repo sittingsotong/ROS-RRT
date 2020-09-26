@@ -19,8 +19,6 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
   mapData = *msg;
 
   ROS_INFO("Got map %d, %d", mapData.info.width, mapData.info.height);
-  ROS_INFO("Map origin %f %f", mapData.info.origin.position.x, mapData.info.origin.position.y);
-  ROS_INFO("%d", mapData.data.size());
 }
 
 // same callback for the start and end coordinateS?
@@ -55,20 +53,20 @@ int main(int argc, char **argv){
   // wait for map data
   while(mapData.data.size()<1){
     ros::spinOnce();
-    ros::Duration(0.1).sleep();
+    ros::Duration(0.5).sleep();
     ROS_INFO("No map data");
   }
 
   // wait for start and goal points
   while(!goal_received){
     ros::spinOnce();
-    ros::Duration(0.1).sleep();
+    ros::Duration(0.5).sleep();
     ROS_INFO("No goal provided");
   }
 
   // run RRT algo
 
-  // create temporary PoseStamped object for origin and goal 
+  // // create temporary PoseStamped object for origin and goal 
   // geometry_msgs::PoseStamped start;
   // start.pose.position.x = 1.0;
   // start.pose.position.y = 1.0;
@@ -78,8 +76,8 @@ int main(int argc, char **argv){
 
   // ROS_INFO("Created PoseStamped");
   // geometry_msgs::PoseStamped goal;
-  // goal.pose.position.x = 498.53;
-  // goal.pose.position.y = 405.0;
+  // goal.pose.position.x = 490.0;
+  // goal.pose.position.y = 490.0;
   // goal.pose.position.z = 0.0;
   // goal.header.frame_id = "map";
   // goal.pose.orientation = tf::createQuaternionMsgFromYaw(0);
@@ -94,7 +92,7 @@ int main(int argc, char **argv){
   nav_msgs::Path path;
   path.poses = poses;
   path.header.frame_id = "map";
-  
+
   while(ros::ok()){
     path_pub.publish(path);
     r.sleep();

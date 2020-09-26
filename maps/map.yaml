@@ -1,4 +1,4 @@
-image: map2.pgm
+image: map1.png
 resolution: 1
 origin: [0.0, 0.0, 0.0]
 occupied_thresh: 0.65

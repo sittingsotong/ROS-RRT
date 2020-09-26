@@ -1,6 +1,6 @@
 #include "rrt/rrt.h"
 // helper function
-int IndexOfPoint(const nav_msgs::MapMetaData& info, const geometry_msgs::Point& point){
+int getIndex(const nav_msgs::MapMetaData& info, const geometry_msgs::Point& point){
     geometry_msgs::Point p = point;
     tf::Transform world_to_map;
     tf::poseMsgToTF(info.origin, world_to_map);
@@ -11,8 +11,7 @@ int IndexOfPoint(const nav_msgs::MapMetaData& info, const geometry_msgs::Point& 
     
     int grid_x = (int)((floor(tf_pt.x()) - info.origin.position.x));
     int grid_y = (int)((floor(tf_pt.y()) - info.origin.position.y));
-    grid_y = info.height - grid_y; //index 1 is top left of map
-    ROS_INFO("Grid values: %d, %d", grid_x, grid_y);
+    // grid_y = info.height - grid_y; //index 1 is top left of map
 
     int index = grid_x + grid_y * info.height;
     return index;
@@ -41,7 +40,7 @@ RRT::RRT(nav_msgs::OccupancyGrid data, const geometry_msgs::PoseStamped& start, 
 
     //set other RRT parameters
     max_iterations = 100000;
-    goal_radius = 1;
+    goal_radius = 10;
     step_size = 1;
 
     // initialise class variables for goal and origin point
@@ -58,7 +57,7 @@ RRT::RRT(nav_msgs::OccupancyGrid data, const geometry_msgs::PoseStamped& start, 
     newNode.parentID = -1;
     rrtTree.push_back(newNode);
 
-    ROS_INFO("Initialised");
+    ROS_DEBUG("Initialised");
 }
 
 std::pair<float, float> RRT::GetRandomPoint(){
@@ -69,7 +68,7 @@ std::pair<float, float> RRT::GetRandomPoint(){
     std::uniform_real_distribution <> y(0, map_height);
 
     point = std::make_pair(x(gen), y(gen));
-    ROS_INFO("Random point: %f, %f", point.first, point.second);
+    ROS_DEBUG("Random point: %f, %f", point.first, point.second);
     return point;
 }
 
@@ -110,7 +109,17 @@ bool RRT::IsValid(std::pair<float, float> start, std::pair<float, float> end){
     float end_x = end.first;
     float end_y = end.second;
 
-    ROS_DEBUG("Getting angle");
+    if(start_x > end_x){
+        // switch start and end points
+        float tmp_x, tmp_y;
+        tmp_x = start_x;
+        tmp_y = start_y;
+        start_x = end_x;
+        start_y = end_y;
+        end_x = tmp_x;
+        end_y = tmp_y;
+    }
+
     // angle between two points
     float theta = atan((end_y - start_y)/(end_x - start_x));
 
@@ -123,20 +132,22 @@ bool RRT::IsValid(std::pair<float, float> start, std::pair<float, float> end){
 
     // convert Point to its index and check if its occupied
     ROS_DEBUG("Converting to Index");
-    int end_index = IndexOfPoint(map.info, end_point);
+    int end_index = getIndex(map.info, end_point);
 
     if(map.data[end_index] > 65){ 
-        ROS_DEBUG("Point is an obstacle");
+        ROS_DEBUG("End point is an obstacle");
         return false;
     }
+    if(current_iteration < 20){ 
+        ROS_DEBUG("Start: (%f, %f), End: (%f, %f)", start_x, start_y, end_x, end_y);
+    }
 
-    while(start_x < end_x && start_y < end_y){
-        ROS_DEBUG("Start: %f, End: %f", start_x, start_y);
+    while(start_x < end_x){
         // using step_size, walk down the path checking if each point is valid
         start_x += step_size * cos(theta);
         start_y += step_size * sin(theta);
 
-        if(start_x >= end_x || start_y >= end_y){
+        if(start_x >= end_x){
             return true;
         }
         
@@ -145,10 +156,10 @@ bool RRT::IsValid(std::pair<float, float> start, std::pair<float, float> end){
         test_point.y = start_y;
         test_point.z = 0.0;
 
-        int test_index = IndexOfPoint(map.info, test_point);
+        int test_index = getIndex(map.info, test_point);
         int result = map.data[test_index];
         if(result > 65){
-            ROS_INFO("Point is an obstacle");
+            ROS_DEBUG("Point is an obstacle");
             return false;
         }
     }
@@ -159,7 +170,6 @@ bool RRT::ReachedGoal(int node){
     std::pair<float, float> curr_pos = rrtTree[node].pos;
 
     float dist = GetDistance(curr_pos, goal);
-    ROS_DEBUG("distance to goal: %f", dist);
     if(dist < goal_radius){
         // check if path between these 2 have obstacle
         std::pair<float, float> point = rrtTree[node].pos;
@@ -173,11 +183,8 @@ bool RRT::ReachedGoal(int node){
             rrtTree.push_back(goalNode);
             return true;
         }
-
-        return false;
-    } else {
-        return false;
     }
+    return false;
 }
 
 int RRT::FindPath(){
@@ -197,11 +204,10 @@ int RRT::FindPath(){
         int closest_node = RRT::getClosestNeighbour(ran_point);
         ROS_DEBUG("Closest Node: %d", closest_node);
 
-        ROS_INFO("Checking if valid");
+        ROS_DEBUG("Checking if valid, current iteration: %d", current_iteration);
         // step 3: check if valid point
         std::pair<float, float> point = rrtTree[closest_node].pos; 
         if(RRT::IsValid(point, ran_point)){
-            ROS_INFO("Is Valid");
             current_iteration ++;
             RRT::rrtNode ranNode;
             ranNode.nodeID = current_iteration;
@@ -209,7 +215,7 @@ int RRT::FindPath(){
             ranNode.parentID = closest_node;
             rrtTree.push_back(ranNode);
 
-            // current_iteration should equal new nodeID?
+            // current_iteration should equal ngoalnode ID
             // check if goal is within goal_radius;
             ROS_DEBUG("Checking if reached goal");
             if (ReachedGoal(current_iteration)){
@@ -219,7 +225,7 @@ int RRT::FindPath(){
         }
 
         if(current_iteration == max_iterations){
-            ROS_INFO("Max iteration reached!");
+            ROS_DEBUG("Max iteration reached!");
             return -1;
         }
     }
@@ -230,6 +236,7 @@ int RRT::FindPath(){
 std::vector<geometry_msgs::PoseStamped> RRT::BuildPath(int goal_index, geometry_msgs::PoseStamped start, geometry_msgs::PoseStamped goal){
     // vector of PoseStamped that creates the path
     std::vector<geometry_msgs::PoseStamped> path;
+    // path_list = std::list<geometry_msgs::PoseStamped>;
 
     if(goal_index == -1){
         return path;
@@ -237,37 +244,44 @@ std::vector<geometry_msgs::PoseStamped> RRT::BuildPath(int goal_index, geometry_
     
     // find the path from the back
     std::list<int> index_list;
-    index_list.push_front(goal_index);
+    index_list.push_front(goal_index); // index of goal node
     int parent_index = rrtTree[goal_index].parentID;
+    ROS_DEBUG("Parent ID: %d", parent_index);
+
     while(parent_index > 0){
         index_list.push_front(parent_index);
         parent_index = rrtTree[parent_index].parentID;
     }
     index_list.push_front(0); 
 
-    // add the path from the front as PoseStamped
+    // iterator for list 
+    std::list<int>::iterator it = index_list.begin();
+
+    // add the path from the front as PoseStamped (vector method)
     for(int i=0; i<index_list.size(); i++){
         ros::Time current_time = ros::Time::now();
         if(i == 0){
+            start.header.frame_id="map";
             start.header.stamp = current_time;
             path.push_back(start);
+            it ++;
+        } else {
+            geometry_msgs::PoseStamped point;
+            point.pose.position.x = rrtTree[*it].pos.first;
+            point.pose.position.y = rrtTree[*it].pos.second;
+            point.pose.position.z = 0.0;
+
+            point.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+
+            point.header.frame_id="map";
+            point.header.stamp = current_time;
+            
+            path.push_back(point);
+            ROS_DEBUG("Point %d is at (%f, %f)", i, rrtTree[*it].pos.first, rrtTree[*it].pos.second);
+            ROS_DEBUG("Node id: %d, Parent id: %d", rrtTree[*it].nodeID, rrtTree[*it].parentID);
+            it ++;
         }
-        geometry_msgs::PoseStamped point;
-        point.pose.position.x = rrtTree[i].pos.first;
-        point.pose.position.y = rrtTree[i].pos.second;
-        point.pose.position.z = 0.0;
-
-        point.pose.orientation = tf::createQuaternionMsgFromYaw(0);
-
-        point.header.frame_id="map";
-        point.header.stamp = current_time;
-        
-        path.push_back(point);
     }
-
-    ros::Time current_time = ros::Time::now();
-    goal.header.stamp = current_time;
-    path.push_back(goal);
 
     return path;
 }
