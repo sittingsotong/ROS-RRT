@@ -31,31 +31,30 @@ roslaunch rrt rrt.launch
 ### YAML file
 To select which map to run the test on, enter the ```maps``` directory and open the ```map.yaml``` file. 
 
-```image```: indicates the path to the map that you want to use.
+```image``` indicates the path to the map that you want to use.
 
-```resolution```: indicates the resolution per grid of the map. A resolution of 1 means each grid of the map represents 1m.
+```resolution``` indicates the resolution per grid of the map. A resolution of 1 means each grid of the map represents 1m.
 
-```origin```: indicates the point of the map to use as the origin.
+```origin``` indicates the point of the map to use as the origin.
 
-```occupied_thresh```: indicates the minimum probability until the grid is considered occupied.
+```occupied_thresh``` indicates the minimum probability until the grid is considered occupied.
 
-```free_thresh```: indicates the maximum probability before the grid is no longer free.
+```free_thresh``` indicates the maximum probability before the grid is no longer free.
 
-```negate```: is 1 if black spaces are free spaces.
+```negate``` is 1 if black spaces are free spaces.
 
 
 
 ### RRT Parameters 
 Some parameters of the algoritm can be adjusted to better fit different types of maps. 
 
-```max_iterations```: Maximum number of iterations before the algorithm decides that a path cannot be found. Default is 100000.
+```max_iterations``` Maximum number of iterations before the algorithm decides that a path cannot be found. Default is 100000.
 
-```goal_radius```: Distance away from the goal point before a path between the goal and node counts.
+```goal_radius``` Distance away from the goal point before a path between the goal and node counts.
 
-```step_size```: The size of a step the algorithm uses to test for an obstacle. A smaller size is more accurate while a larger size is faster.
+```step_size``` The size of a step the algorithm uses to test for an obstacle. A smaller size is more accurate while a larger size is faster.
 
 
 ## Issues 
 1. Only works for resolution = 1. A different resolution causes the map and path sizes to be different when visualising it on rviz.
-2. ```RRT::IsValid``` and ```IndexOfPoint``` functions in ```rrt.cpp``` does not seem to be working properly. Published path still cuts through obstacles. 
-3. On some runs the algorithm cannot find a path. Rerunning it would usually work. 
+2. Visualisation only works for the built path.

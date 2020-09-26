@@ -28,7 +28,7 @@ RRT::RRT(){
     rrtTree.push_back(newNode);
 
     //set other RRT parameters
-    max_iterations = 30000;
+    max_iterations = 10000;
     goal_radius = 1;
     step_size = 2;
 }
@@ -39,7 +39,7 @@ RRT::RRT(nav_msgs::OccupancyGrid data, const geometry_msgs::PoseStamped& start, 
     map_height = data.info.height;
 
     //set other RRT parameters
-    max_iterations = 100000;
+    max_iterations = 10000;
     goal_radius = 10;
     step_size = 1;
 
