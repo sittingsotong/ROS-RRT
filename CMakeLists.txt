@@ -36,7 +36,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES rrt
+  LIBRARIES rrt graph
   CATKIN_DEPENDS message_runtime nav_msgs roscpp rospy std_msgs geometry_msgs tf
   DEPENDS system_lib 
 )
@@ -51,23 +51,20 @@ include_directories(
 
 ## Declare a C++ library
 add_library(rrt src/rrt.cpp)
-
-# Declaring executables that have to be built
-# add_executable(server src/mapserver.cpp)
-# target_link_libraries(server ${catkin_LIBRARIES})
-# add_dependencies(server rrt_generate_messages_cpp)
+add_library(graph src/graph.cpp)
 
 add_executable(planner src/planner.cpp)
-target_link_libraries(planner ${catkin_LIBRARIES} rrt)
+target_link_libraries(planner ${catkin_LIBRARIES} rrt graph)
 add_dependencies(planner rrt_generate_messages_cpp)
 
 target_link_libraries(rrt ${catkin_LIBRARIES})
+target_link_libraries(graph ${catkin_LIBRARIES})
 
 #############
 ## Install ##
 #############
 install(
-  TARGETS rrt
+  TARGETS rrt graph
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}

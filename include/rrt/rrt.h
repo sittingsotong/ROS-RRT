@@ -40,7 +40,7 @@ class RRT{
         RRT();
 
         // constructor with OccupancyGrid map and start and goal points
-        RRT(nav_msgs::OccupancyGrid data, const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& end);
+        RRT(const nav_msgs::OccupancyGrid& data, const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& end);
 
         // generates random point
         std::pair<float, float> GetRandomPoint();

@@ -33,7 +33,7 @@ RRT::RRT(){
     step_size = 2;
 }
 
-RRT::RRT(nav_msgs::OccupancyGrid data, const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& end){
+RRT::RRT(const nav_msgs::OccupancyGrid& data, const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& end){
     map = data;
     map_width = data.info.width;
     map_height = data.info.height;
@@ -293,29 +293,24 @@ std::vector<geometry_msgs::PoseStamped> RRT::RerunAlgo(geometry_msgs::PoseStampe
         ros::Time current_time = ros::Time::now();
         if(i == 0){
             start.header.stamp = current_time;
+            start.header.frame_id = "map";
             start.pose.position.x *= map.info.resolution;
             start.pose.position.y *= map.info.resolution;
             path.push_back(start);
+        } else {
+            geometry_msgs::PoseStamped point;
+            point.pose.position.x = rrtTree[i].pos.first * map.info.resolution;
+            point.pose.position.y = rrtTree[i].pos.second * map.info.resolution;
+            point.pose.position.z = 0.0;
+
+            point.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+
+            point.header.frame_id="map";
+            point.header.stamp = current_time;
+            
+            path.push_back(point);
         }
-
-        geometry_msgs::PoseStamped point;
-        point.pose.position.x = rrtTree[i].pos.first * map.info.resolution;
-        point.pose.position.y = rrtTree[i].pos.second * map.info.resolution;
-        point.pose.position.z = 0.0;
-
-        point.pose.orientation = tf::createQuaternionMsgFromYaw(0);
-
-        point.header.frame_id="map";
-        point.header.stamp = current_time;
-        
-        path.push_back(point);
-    } 
-
-    ros::Time current_time = ros::Time::now();
-    goal.header.stamp = current_time;
-    goal.pose.position.x *= map.info.resolution;
-    goal.pose.position.y += map.info.resolution;
-    path.push_back(goal);    
-    
+    }    
+ 
     return path;
 }

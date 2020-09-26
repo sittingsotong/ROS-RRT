@@ -13,7 +13,7 @@
 // global variables 
 nav_msgs::OccupancyGrid mapData;
 geometry_msgs::PoseStamped start, goal;
-bool goal_received = false;
+bool goal_received = true;
 
 void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
   mapData = *msg;
@@ -66,26 +66,25 @@ int main(int argc, char **argv){
 
   // run RRT algo
 
-  // // create temporary PoseStamped object for origin and goal 
-  // geometry_msgs::PoseStamped start;
-  // start.pose.position.x = 1.0;
-  // start.pose.position.y = 1.0;
-  // start.pose.position.z = 0.0;
-  // start.header.frame_id = "map";
-  // start.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+  // create temporary PoseStamped object for origin and goal 
+  geometry_msgs::PoseStamped start;
+  start.pose.position.x = 1.0;
+  start.pose.position.y = 1.0;
+  start.pose.position.z = 0.0;
+  start.header.frame_id = "map";
+  start.pose.orientation = tf::createQuaternionMsgFromYaw(0);
 
-  // ROS_INFO("Created PoseStamped");
-  // geometry_msgs::PoseStamped goal;
-  // goal.pose.position.x = 490.0;
-  // goal.pose.position.y = 490.0;
-  // goal.pose.position.z = 0.0;
-  // goal.header.frame_id = "map";
-  // goal.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+  ROS_INFO("Created PoseStamped");
+  geometry_msgs::PoseStamped goal;
+  goal.pose.position.x = 490.0;
+  goal.pose.position.y = 490.0;
+  goal.pose.position.z = 0.0;
+  goal.header.frame_id = "map";
+  goal.pose.orientation = tf::createQuaternionMsgFromYaw(0);
 
   // initialise RRT class with mapData and points
   RRT rrt(mapData, start, goal);
   int goal_index = rrt.FindPath();
-  ROS_INFO("goal index is: %d", goal_index);
   std::vector<geometry_msgs::PoseStamped> poses = rrt.BuildPath(goal_index, start, goal);
   ROS_INFO("number of points: %d", poses.size());
   
