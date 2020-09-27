@@ -58,3 +58,4 @@ Some parameters of the algoritm can be adjusted to better fit different types of
 ## Issues 
 1. Only works for resolution = 1. A different resolution causes the map and path sizes to be different when visualising it on rviz.
 2. Visualisation only works for the built path.
+3. Graph structure not working yet

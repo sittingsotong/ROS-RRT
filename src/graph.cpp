@@ -20,3 +20,14 @@ void Graph::addVertex(int parent_id, int new_id, std::pair<float, float> point){
     new_vertex->next = arr[parent_id].head;
     arr[parent_id].head = new_vertex;
 }
+
+void Graph::printGraph(){
+    for(int i=0; i<arr.size(); i++){
+        Vertex *start = arr[i].head;
+        ROS_INFO_STREAM("Adjacency list" << i << std::endl);
+        while(start != NULL){
+            ROS_INFO_STREAM(start->vertex_id << "-> ");
+            start = start->next;
+        }
+    }
+}

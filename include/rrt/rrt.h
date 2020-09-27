@@ -30,10 +30,14 @@ class RRT{
             int nodeID;
             std::pair<float, float> pos;
             int parentID;
+            RRT::rrtNode* next;
         };
 
         // tree of RRT paths
         std::vector<RRT::rrtNode> rrtTree;
+
+        // vector of pointers to nodes (tree structure)
+        std::vector<RRT::rrtNode*> graph;
 
     public:
         // default constructor
@@ -65,8 +69,14 @@ class RRT{
         // returns a vector of PoseStamped to be added to Path message
         std::vector<geometry_msgs::PoseStamped> BuildPath(int goal_index, geometry_msgs::PoseStamped start, geometry_msgs::PoseStamped goal);
 
-        // reruns the algo with all points created for visualisation
-        std::vector<geometry_msgs::PoseStamped> RerunAlgo(geometry_msgs::PoseStamped start, geometry_msgs::PoseStamped goal);
+        // methods for graph
+        // constructor with starting point
+        void createGraph(RRT::rrtNode node);
+
+        // adds new vertex point
+        void addNode(int parent_id, RRT::rrtNode node);
+
+        void printGraph();
 };
 
 #endif

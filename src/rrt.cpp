@@ -1,4 +1,5 @@
 #include "rrt/rrt.h"
+
 // helper function
 int getIndex(const nav_msgs::MapMetaData& info, const geometry_msgs::Point& point){
     geometry_msgs::Point p = point;
@@ -57,6 +58,8 @@ RRT::RRT(const nav_msgs::OccupancyGrid& data, const geometry_msgs::PoseStamped& 
     newNode.parentID = -1;
     rrtTree.push_back(newNode);
 
+    RRT::createGraph(newNode);
+
     ROS_DEBUG("Initialised");
 }
 
@@ -90,8 +93,7 @@ int RRT::getClosestNeighbour(std::pair<float, float> point){
 
     // iterate through all rrtNodes and find closest
     for(int i=0; i<rrtTree.size(); i++){
-        curr_dist = GetDistance(point, rrtTree[i].pos);
-
+        curr_dist = RRT::GetDistance(point, rrtTree[i].pos);
         // check if distance between point and node is lesser than closest_dist
         if(curr_dist < closest_dist){
             closest_dist = curr_dist;
@@ -169,7 +171,7 @@ bool RRT::IsValid(std::pair<float, float> start, std::pair<float, float> end){
 bool RRT::ReachedGoal(int node){
     std::pair<float, float> curr_pos = rrtTree[node].pos;
 
-    float dist = GetDistance(curr_pos, goal);
+    float dist = RRT::GetDistance(curr_pos, goal);
     if(dist < goal_radius){
         // check if path between these 2 have obstacle
         std::pair<float, float> point = rrtTree[node].pos;
@@ -181,6 +183,7 @@ bool RRT::ReachedGoal(int node){
             goalNode.parentID = node;
 
             rrtTree.push_back(goalNode);
+            RRT::addNode(node, goalNode);
             return true;
         }
     }
@@ -188,7 +191,7 @@ bool RRT::ReachedGoal(int node){
 }
 
 int RRT::FindPath(){
-    ROS_DEBUG("Finding Path");
+    ROS_INFO("Finding Path");
     bool done = false;
     int goal_index = -1; 
     current_iteration = 0;
@@ -215,17 +218,19 @@ int RRT::FindPath(){
             ranNode.parentID = closest_node;
             rrtTree.push_back(ranNode);
 
+            RRT::addNode(closest_node, ranNode);
+
             // current_iteration should equal ngoalnode ID
             // check if goal is within goal_radius;
             ROS_DEBUG("Checking if reached goal");
-            if (ReachedGoal(current_iteration)){
+            if (RRT::ReachedGoal(current_iteration)){
                 goal_index = current_iteration;
                 done = true;
             }
         }
 
         if(current_iteration == max_iterations){
-            ROS_DEBUG("Max iteration reached!");
+            ROS_INFO("Max iteration reached!");
             return -1;
         }
     }
@@ -286,31 +291,33 @@ std::vector<geometry_msgs::PoseStamped> RRT::BuildPath(int goal_index, geometry_
     return path;
 }
 
-std::vector<geometry_msgs::PoseStamped> RRT::RerunAlgo(geometry_msgs::PoseStamped start, geometry_msgs::PoseStamped goal){
-    std::vector<geometry_msgs::PoseStamped> path;
+void RRT::createGraph(RRT::rrtNode node){
+    // pointer to first rrtNode
+    node.next = NULL;
 
-    for(int i=0; i<rrtTree.size(); i++){
-        ros::Time current_time = ros::Time::now();
-        if(i == 0){
-            start.header.stamp = current_time;
-            start.header.frame_id = "map";
-            start.pose.position.x *= map.info.resolution;
-            start.pose.position.y *= map.info.resolution;
-            path.push_back(start);
-        } else {
-            geometry_msgs::PoseStamped point;
-            point.pose.position.x = rrtTree[i].pos.first * map.info.resolution;
-            point.pose.position.y = rrtTree[i].pos.second * map.info.resolution;
-            point.pose.position.z = 0.0;
+    graph.push_back(&node);
+    ROS_INFO("start: %d", graph[0]->nodeID);
+}
 
-            point.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+void RRT::addNode(int parent_id, RRT::rrtNode node){
+    RRT::rrtNode new_node = node;
+    
+    node.next = graph[parent_id];
+    graph[parent_id] = &node;
+    
+    new_node.next = NULL;
+    graph.push_back(&new_node);
+}
 
-            point.header.frame_id="map";
-            point.header.stamp = current_time;
-            
-            path.push_back(point);
+// function not working yet
+void RRT::printGraph(){
+    ROS_INFO("Size of adjacency list: %d", graph.size());
+    for(int i=0; i<20; i++){
+        RRT::rrtNode* start = graph[i];
+        ROS_INFO("Adjacency list %d", i);
+        while(start != NULL){
+            ROS_INFO("id: %d", start->nodeID);
+            start = start->next;
         }
-    }    
- 
-    return path;
+    }
 }

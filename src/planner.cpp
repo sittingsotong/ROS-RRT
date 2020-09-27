@@ -92,6 +92,8 @@ int main(int argc, char **argv){
   path.poses = poses;
   path.header.frame_id = "map";
 
+  rrt.printGraph();
+
   while(ros::ok()){
     path_pub.publish(path);
     r.sleep();

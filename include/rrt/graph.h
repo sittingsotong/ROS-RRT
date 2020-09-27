@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <vector>
 #include <utility>
+#include "ros/ros.h"
 #include "geometry_msgs/PoseStamped.h"
 
 
@@ -33,6 +34,8 @@ class Graph{
 
         // adds new vertex point
         void addVertex(int parent_id, int new_id, std::pair<float, float> point);
+
+        void printGraph();
 };
 
 #endif
