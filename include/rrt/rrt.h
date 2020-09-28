@@ -30,14 +30,14 @@ class RRT{
             int nodeID;
             std::pair<float, float> pos;
             int parentID;
-            RRT::rrtNode* next;
+            std::vector<RRT::rrtNode> children;
         };
 
         // tree of RRT paths
         std::vector<RRT::rrtNode> rrtTree;
 
         // vector of pointers to nodes (tree structure)
-        std::vector<RRT::rrtNode*> graph;
+        std::vector<RRT::rrtNode> graph;
 
     public:
         // default constructor

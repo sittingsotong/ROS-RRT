@@ -293,31 +293,30 @@ std::vector<geometry_msgs::PoseStamped> RRT::BuildPath(int goal_index, geometry_
 
 void RRT::createGraph(RRT::rrtNode node){
     // pointer to first rrtNode
-    node.next = NULL;
+    std::vector<RRT::rrtNode> vec;
+    node.children = vec;
 
-    graph.push_back(&node);
-    ROS_INFO("start: %d", graph[0]->nodeID);
+    graph.push_back(node);
 }
 
 void RRT::addNode(int parent_id, RRT::rrtNode node){
     RRT::rrtNode new_node = node;
+
+    graph[parent_id].children.push_back(node);
     
-    node.next = graph[parent_id];
-    graph[parent_id] = &node;
-    
-    new_node.next = NULL;
-    graph.push_back(&new_node);
+    std::vector<RRT::rrtNode> vec;
+    new_node.children = vec;
+    graph.push_back(new_node);
 }
 
 // function not working yet
 void RRT::printGraph(){
     ROS_INFO("Size of adjacency list: %d", graph.size());
-    for(int i=0; i<20; i++){
-        RRT::rrtNode* start = graph[i];
+    for(int i=0; i<graph.size(); i++){
         ROS_INFO("Adjacency list %d", i);
-        while(start != NULL){
-            ROS_INFO("id: %d", start->nodeID);
-            start = start->next;
+        RRT::rrtNode parent = graph[i];
+        for(int j=0; j<parent.children.size(); j++){
+            ROS_INFO("id: %d", parent.children[j].nodeID);
         }
     }
 }
